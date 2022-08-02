@@ -36,7 +36,6 @@ image_%: gobuild_docker_% buildx_create_environment
 
 plugin_%: image_%
 	docker plugin create ${PLUGIN_NAME}:$* ./plugin-src/
-	rm -rf ./plugin-src/rootfs
 
 push_%: plugin_%
 	docker plugin push ${PLUGIN_NAME}:$*
