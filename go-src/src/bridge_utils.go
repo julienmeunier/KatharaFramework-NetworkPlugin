@@ -11,18 +11,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const (
-	bridgePrefix    = "kt"
-	bridgeLen   	= 12
-)
-
-func getBridgeName(netID string) string {
-	return bridgePrefix + "-" + netID[:bridgeLen]
-}
-
-func createBridge(netID string) (string, error) {
-	bridgeName := getBridgeName(netID)
-
+func createBridge(bridgeName string) (string, error) {
 	exists, err := bridgeInterfaceExists(bridgeName)
 	if err != nil {
 		return "", err
@@ -89,23 +78,6 @@ func patchBridge(bridge netlink.Link) error {
 }
 
 func deleteBridge(netID string) error {
-	bridgeName := getBridgeName(netID)
-
-	bridge, err := netlink.LinkByName(bridgeName)
-	if err != nil {
-		return err
-	}
-
-	if err := netlink.LinkDel(bridge); err != nil {
-		return err
-	}
-
-	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
-    var iptable = iptables.GetIptable(iptables.IPv4)
-	if err := iptable.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
-		return err
-	}
-
 	return nil
 }
 

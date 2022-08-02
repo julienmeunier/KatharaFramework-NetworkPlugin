@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/go-plugins-helpers/network"
 	"github.com/docker/libnetwork/types"
+	"github.com/mitchellh/mapstructure"
 )
 
 var (
@@ -29,6 +30,35 @@ type KatharaNetworkPlugin struct {
 	scope    string
 	networks map[string]*katharaNetwork
 	sync.Mutex
+}
+
+type BridgeOptions struct {
+	Bridge          string
+}
+
+const (
+	OptionsKeyGeneric = "com.docker.network.generic"
+)
+
+func decodeOpts(input interface{}) (BridgeOptions, error) {
+	var opts BridgeOptions
+	optsDecoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:           &opts,
+		ErrorUnused:      true,
+		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+		),
+	})
+	if err != nil {
+		return opts, types.ForbiddenErrorf("failed to create options decoder: %w", err)
+	}
+
+	if err := optsDecoder.Decode(input); err != nil {
+		return opts, err
+	}
+
+	return opts, nil
 }
 
 func (k *KatharaNetworkPlugin) GetCapabilities() (*network.CapabilitiesResponse, error) {
@@ -55,7 +85,12 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
 	}
 
-	bridgeName, err := createBridge(req.NetworkID)
+	opts, err := decodeOpts(req.Options[OptionsKeyGeneric])
+	if err != nil {
+		return types.ForbiddenErrorf("failed to decode network options: %w", err)
+	}
+
+	bridgeName, err := createBridge(opts.Bridge)
 	if err != nil {
 		return err
 	}

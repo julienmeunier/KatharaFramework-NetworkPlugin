@@ -12,6 +12,7 @@ require (
 	github.com/docker/libnetwork v0.8.0-dev.2.0.20210525090646-64b7a4574d14
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/google/uuid v1.3.0
+	github.com/mitchellh/mapstructure v1.4.1
 	github.com/ishidawataru/sctp v0.0.0-20210707070123-9a39160e9062 // indirect
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
